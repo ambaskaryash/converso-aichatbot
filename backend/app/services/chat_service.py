@@ -10,6 +10,8 @@ from app.services.llm_factory import get_llm
 from datetime import datetime
 import logging
 
+from app.services.email import send_email
+
 logger = logging.getLogger(__name__)
 
 class ChatService:
@@ -46,6 +48,27 @@ class ChatService:
         # 1.2 Persist user message
         user_msg = ChatMessage(session_id=session.id, role="user", content=message)
         db.add(user_msg)
+        
+        # Check for human handoff
+        handoff_keywords = ["human", "support", "agent", "person"]
+        if any(k in message.lower() for k in handoff_keywords):
+             logger.warning(f"Human handoff triggered for session {session_id}")
+             meta = session.metadata_ or {}
+             meta["needs_human"] = True
+             session.metadata_ = meta
+             db.add(session)
+             
+             if settings.ADMIN_EMAIL:
+                 # Run in thread to avoid blocking async loop
+                 asyncio.create_task(
+                     asyncio.to_thread(
+                         send_email,
+                         settings.ADMIN_EMAIL,
+                         f"Human Handoff Request: Project {project.name}",
+                         f"User in session {session_id} requested human support.\nMessage: {message}"
+                     )
+                 )
+        
         await db.flush()
         user_time = datetime.utcnow()
 

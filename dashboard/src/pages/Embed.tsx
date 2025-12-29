@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Code, Globe, Eye, Palette, Copy, Check } from 'lucide-react';
 import { api } from '../lib/api';
 import { Button3D } from 'react-3d-button';
+import { Input } from '../components/ui/Input';
 
 // Design: Embed page centers on the snippet, domain whitelist, theme selection, and quick preview actions.
 // Clear guidance and a copy button reduce friction for developers and founders.
@@ -176,11 +177,14 @@ onMounted(() => {
           </div>
           <div className="mt-4 flex gap-3">
             <Button3D type="info" onPress={copySnippet}>
-              Copy
+              <span className="flex items-center gap-2">
+                <Copy size={16} />
+                Copy
+              </span>
             </Button3D>
             <Button3D type="success" onPress={livePreview}>
               <span className="flex items-center gap-2">
-                <Eye size={18} />
+                <Eye size={16} />
                 Live Preview
               </span>
             </Button3D>
@@ -195,14 +199,16 @@ onMounted(() => {
           <p className="text-sm text-gray-400 mt-2">Only these domains can load your bot</p>
           <div className="mt-3">
             <div className="flex gap-3">
-              <input
-                className="flex-1 input-base"
+              <Input
+                className="flex-1"
                 placeholder="e.g. yoursite.com"
                 value={newDomain}
                 onChange={(e) => setNewDomain(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addDomain()}
               />
-              <Button3D type="secondary" onPress={addDomain}>Add</Button3D>
+              <Button3D type="secondary" onPress={addDomain} disabled={!newDomain.trim()}>
+                Add
+              </Button3D>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {domains.map((d) => (
@@ -218,7 +224,7 @@ onMounted(() => {
               <Palette size={16} />
               Theme
             </h4>
-            <p className="text-sm text-gray-400 mt-1">Controls the button 3D theme</p>
+            <p className="text-sm text-gray-400 mt-1">Controls the widget theme</p>
             <select
               className="mt-2 w-full px-3 py-2 rounded-md bg-gray-950 border border-gray-800 text-gray-200 outline-none"
               value={theme}

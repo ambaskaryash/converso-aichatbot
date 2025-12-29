@@ -12,6 +12,7 @@ export interface Project {
   api_key: string;
   created_at: string;
   updated_at?: string;
+  welcome_message?: string;
 }
 
 export interface IngestResponse {
@@ -53,6 +54,49 @@ export const api = {
       }),
     });
     if (!response.ok) throw new Error('Failed to create project');
+    return response.json();
+  },
+
+  deleteProject: async (id: string): Promise<{ ok: boolean }> => {
+    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+        'x-csrf-token': getCsrfToken(),
+      },
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete project');
+    }
+    return response.json();
+  },
+
+  updateProject: async (id: string, payload: { name?: string; welcome_message?: string; system_prompt?: string }): Promise<Project> => {
+    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`,
+        'x-csrf-token': getCsrfToken(),
+      },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error('Failed to update project');
+    return response.json();
+  },
+
+  rotateKey: async (id: string): Promise<Project> => {
+    const response = await fetch(`${API_BASE_URL}/projects/${id}/rotate-key`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+        'x-csrf-token': getCsrfToken(),
+      },
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to rotate key');
     return response.json();
   },
 
@@ -136,6 +180,7 @@ export const api = {
         Authorization: `Bearer ${getToken()}`,
         'x-csrf-token': getCsrfToken(),
       },
+      credentials: 'include',
       body: JSON.stringify({ role }),
     });
     if (!response.ok) {

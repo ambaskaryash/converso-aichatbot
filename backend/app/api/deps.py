@@ -64,3 +64,32 @@ async def get_current_admin(request: Request, db: AsyncSession = Depends(get_db)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+async def get_current_admin_user(request: Request, db: AsyncSession = Depends(get_db)) -> AdminUser:
+    """
+    Same as get_current_admin but returns the full AdminUser object.
+    Useful for checking roles.
+    """
+    email = await get_current_admin(request, db)
+    # Re-fetch user to get role (optimized: get_current_admin already fetches but returns string. 
+    # We could optimize this to not fetch twice, but for now reuse logic).
+    # Actually get_current_admin fetches it. We could refactor get_current_admin to return User, 
+    # but that breaks signature for existing endpoints. 
+    # Let's just fetch again or refactor get_current_admin to delegate.
+    
+    result = await db.execute(select(AdminUser).filter(AdminUser.email == email))
+    user = result.scalars().first()
+    if not user:
+         # Fallback for env-based admins who might not be in DB yet
+         return AdminUser(email=email, role="owner") # Env admins are owners
+    return user
+
+async def get_write_admin(user: AdminUser = Depends(get_current_admin_user)) -> str:
+    """
+    Dependency to ensure the admin has write access (role != viewer).
+    Returns the email string to match existing signatures if needed, 
+    or we can update endpoints to accept AdminUser.
+    """
+    if user.role == 'viewer':
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Viewers cannot perform this action")
+    return user.email

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { CheckCircle, AlertCircle, Activity, Clock, MessageSquare, Users } from 'lucide-react';
+import { CheckCircle, AlertCircle, Activity, Clock, MessageSquare, Users, RefreshCw, Zap } from 'lucide-react';
 import { api } from '../lib/api';
 import { Button3D } from 'react-3d-button';
 
@@ -93,13 +93,14 @@ export const Overview: React.FC = () => {
   return (
     <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-100">Converso Overview</h2>
-            <p className="text-gray-400">Health and usage across your chatbots</p>
-          </div>
-          <div className="flex items-center gap-3">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-100 tracking-tight">Converso Overview</h2>
+          <p className="text-gray-400 mt-1">Health and usage across your chatbots</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
             <select
-              className="select-base"
+              className="appearance-none bg-gray-800/50 border border-gray-700 text-gray-100 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-8 hover:bg-gray-800 transition-colors"
               value={selectedProjectId ?? ''}
               onChange={(e) => setSelectedProjectId(e.target.value || undefined)}
             >
@@ -108,39 +109,46 @@ export const Overview: React.FC = () => {
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
-            <Button3D type="info" onPress={() => window.location.reload()}>
-              Refresh
-            </Button3D>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
           </div>
+          <Button3D type="secondary" onPress={() => window.location.reload()}>
+            <span className="flex items-center gap-2">
+              <RefreshCw size={16} />
+              Refresh
+            </span>
+          </Button3D>
         </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card-base p-6">
-          <div className="flex items-center gap-3 text-gray-400">
+        <div className="card-base p-6 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 group">
+          <div className="flex items-center gap-3 text-gray-400 group-hover:text-blue-400 transition-colors">
             <MessageSquare size={18} />
             Total Conversations
           </div>
           <div className="mt-3 text-3xl font-bold text-gray-100">{totalConversations.toLocaleString()}</div>
         </div>
 
-        <div className="card-base p-6">
-          <div className="flex items-center gap-3 text-gray-400">
+        <div className="card-base p-6 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300 group">
+          <div className="flex items-center gap-3 text-gray-400 group-hover:text-purple-400 transition-colors">
             <Activity size={18} />
             Messages Today
           </div>
           <div className="mt-3 text-3xl font-bold text-gray-100">{messagesToday}</div>
         </div>
 
-        <div className="card-base p-6">
-          <div className="flex items-center gap-3 text-gray-400">
+        <div className="card-base p-6 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 group">
+          <div className="flex items-center gap-3 text-gray-400 group-hover:text-green-400 transition-colors">
             <Users size={18} />
             Active Users
           </div>
           <div className="mt-3 text-3xl font-bold text-gray-100">{activeUsers}</div>
         </div>
 
-        <div className="card-base p-6">
-          <div className="flex items-center gap-3 text-gray-400">
+        <div className="card-base p-6 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 group">
+          <div className="flex items-center gap-3 text-gray-400 group-hover:text-orange-400 transition-colors">
             <Clock size={18} />
             Avg Response Time
           </div>
@@ -167,31 +175,55 @@ export const Overview: React.FC = () => {
         </div>
 
         <div className="card-base p-6">
-          <h3 className="text-lg font-semibold text-gray-100">Chatbot Status</h3>
-          <div className="mt-4 flex items-center gap-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-100">Chatbot Status</h3>
             {isLive ? (
-              <CheckCircle className="text-green-500" size={20} />
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                <span className="text-xs font-medium text-green-400">Live</span>
+              </div>
             ) : (
-              <AlertCircle className="text-red-500" size={20} />
-            )}
-            <span className="text-gray-300">{isLive ? 'Live' : 'Offline'}</span>
-          </div>
-          <p className="text-sm text-gray-400 mt-2">
-            Converso services operational. Recent deployments healthy.
-          </p>
-          <div className="mt-4">
-            <Button3D type="success" disabled={running} onPress={runDiagnostics}>
-              Run Diagnostics
-            </Button3D>
-            {diag.length > 0 && (
-              <div className="mt-3 space-y-1">
-                {diag.map((d) => (
-                  <div key={d.name} className={`text-sm ${d.ok ? 'text-green-400' : 'text-red-400'}`}>
-                    {d.name}: {d.ok ? 'OK' : 'Fail'}{d.detail ? ` (${d.detail})` : ''}
-                  </div>
-                ))}
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20">
+                <AlertCircle className="text-red-500" size={14} />
+                <span className="text-xs font-medium text-red-400">Offline</span>
               </div>
             )}
+          </div>
+          
+          <div className="flex flex-col h-[calc(100%-3rem)] justify-between">
+            <div>
+              <p className="text-sm text-gray-400 mb-6">
+                Converso services operational. Recent deployments healthy.
+              </p>
+              
+              {diag.length > 0 && (
+                <div className="space-y-2 mb-6">
+                  {diag.map((d) => (
+                    <div key={d.name} className={`flex items-center justify-between text-sm p-2 rounded bg-gray-800/50 ${d.ok ? 'text-green-400 border border-green-500/20' : 'text-red-400 border border-red-500/20'}`}>
+                      <span className="font-medium">{d.name}</span>
+                      <div className="flex items-center gap-2">
+                        {d.ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+                        <span>{d.ok ? 'OK' : 'Fail'}{d.detail ? ` (${d.detail})` : ''}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Button3D
+              type="primary"
+              onPress={runDiagnostics}
+              disabled={running}
+            >
+              <span className="flex items-center gap-2 w-full justify-center">
+                {!running && <Zap size={16} />}
+                {running ? 'Running Diagnostics...' : 'Run Diagnostics'}
+              </span>
+            </Button3D>
           </div>
         </div>
       </div>

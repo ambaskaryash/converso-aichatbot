@@ -2,7 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button3D } from 'react-3d-button';
+import { Input } from '../components/ui/Input';
 import { api } from '../lib/api';
+import { User, Shield, Key, LogOut } from 'lucide-react';
 
 const decodeTokenEmail = (): string | null => {
   const t = localStorage.getItem('converso_token') || '';
@@ -62,57 +64,91 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto">
       {toast && (
         <div className={`fixed top-4 right-4 px-4 py-3 rounded-md border ${toast.type === 'error' ? 'bg-red-950 border-red-900 text-red-300' : 'bg-green-950 border-green-900 text-green-300'}`}>
           {toast.message}
         </div>
       )}
+      
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center border border-blue-500/30">
+          <User className="text-blue-400" size={24} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-100">Account Settings</h2>
+          <p className="text-gray-400">Manage your profile and preferences</p>
+        </div>
+      </div>
+
       <div className="card-base p-6">
-        <h2 className="text-xl font-semibold text-gray-100">Profile</h2>
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h3 className="text-lg font-semibold text-gray-100 flex items-center gap-2 mb-6">
+          <Shield size={20} className="text-blue-400" />
+          Profile Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <div className="label-base mb-1">Email</div>
-            <input className="input-base w-full" value={email ?? ''} readOnly />
+            <label className="label-base mb-2">Email Address</label>
+            <Input value={email ?? ''} readOnly className="bg-gray-900/50" />
           </div>
           <div>
-            <div className="label-base mb-1">Role</div>
-            <input className="input-base w-full" value={me?.role ?? ''} readOnly />
+            <label className="label-base mb-2">Role</label>
+            <Input value={me?.role ?? ''} readOnly className="bg-gray-900/50" />
           </div>
         </div>
       </div>
 
       <div className="card-base p-6">
-        <h3 className="text-lg font-semibold text-gray-100">Change Password</h3>
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-          <input
-            type="password"
-            className="input-base"
-            placeholder="New password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-          <Button3D
-            type="primary"
-            disabled={!strongPassword(newPassword) || updateMutation.status === 'pending'}
-            onPress={() => {
-              if (!strongPassword(newPassword)) {
-                showToast({ type: 'error', message: 'Password is weak. Use 8+ chars with upper, lower, number, symbol.' });
-                return;
-              }
-              updateMutation.mutate();
-            }}
-          >
-            {updateMutation.status === 'pending' ? 'Updating...' : 'Update Password'}
+        <h3 className="text-lg font-semibold text-gray-100 flex items-center gap-2 mb-6">
+          <Key size={20} className="text-blue-400" />
+          Security
+        </h3>
+        <div className="max-w-md">
+          <label className="label-base mb-2">Change Password</label>
+          <div className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+            <div className="flex items-center gap-3">
+              <Button3D
+                type="primary"
+                disabled={!strongPassword(newPassword) || updateMutation.status === 'pending'}
+                onPress={() => {
+                  if (!strongPassword(newPassword)) {
+                    showToast({ type: 'error', message: 'Password is weak. Use 8+ chars with upper, lower, number, symbol.' });
+                    return;
+                  }
+                  updateMutation.mutate();
+                }}
+              >
+                Update Password
+              </Button3D>
+              {newPassword && (
+                <Button3D type="secondary" onPress={() => setNewPassword('')}>
+                  Clear
+                </Button3D>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-3">
+            Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and symbols.
+          </p>
+        </div>
+      </div>
+
+      <div className="card-base p-6 border-red-900/30 bg-red-950/10">
+        <h3 className="text-lg font-semibold text-red-400 flex items-center gap-2 mb-4">
+          <LogOut size={20} />
+          Session
+        </h3>
+        <div className="flex items-center justify-between">
+          <p className="text-gray-400 text-sm">Sign out of your account on this device.</p>
+          <Button3D type="danger" onPress={logout}>
+            Sign Out
           </Button3D>
-          <Button3D type="secondary" onPress={() => setNewPassword('')}>Clear</Button3D>
-        </div>
-      </div>
-
-      <div className="card-base p-6">
-        <h3 className="text-lg font-semibold text-gray-100">Session</h3>
-        <div className="mt-4">
-          <Button3D type="danger" onPress={logout}>Logout</Button3D>
         </div>
       </div>
     </div>

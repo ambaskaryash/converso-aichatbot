@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Boolean
+from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Boolean, Integer
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -17,6 +17,7 @@ class Project(Base):
     # RAG Configuration
     vector_namespace = Column(String, unique=True, nullable=False)
     system_prompt = Column(Text, nullable=True)
+    welcome_message = Column(Text, nullable=True)
     
     sessions = relationship("ChatSession", back_populates="project")
     documents = relationship("Document", back_populates="project")
@@ -50,6 +51,7 @@ class ChatMessage(Base):
     role = Column(String, nullable=False) # user, assistant, system
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    feedback_score = Column(Integer, nullable=True) # 1 for helpful, -1 for not helpful
     
     session = relationship("ChatSession", back_populates="messages")
 

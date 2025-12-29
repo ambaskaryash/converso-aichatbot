@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Send, X, MoreVertical } from 'lucide-react';
+import { Send, X, MoreVertical, ThumbsUp, ThumbsDown, Paperclip } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
 import clsx from 'clsx';
 import { Button3D } from 'react-3d-button';
@@ -10,9 +10,11 @@ interface ChatWindowProps {
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({ projectId, onClose }) => {
-  const { messages, sendMessage, isConnected, isTyping } = useChat(projectId);
+  const { messages, sendMessage, isConnected, isTyping, submitFeedback, uploadFile } = useChat(projectId);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [feedbackGiven, setFeedbackGiven] = useState<Record<string, number>>({});
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -27,6 +29,21 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ projectId, onClose }) =>
     if (!inputValue.trim() || !isConnected) return;
     sendMessage(inputValue);
     setInputValue('');
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const text = await uploadFile(file);
+      if (text) {
+        setInputValue((prev) => (prev ? prev + '\n\n' + text : text));
+      }
+    }
+  };
+
+  const handleFeedback = (messageId: string, score: number) => {
+      submitFeedback(messageId, score);
+      setFeedbackGiven(prev => ({ ...prev, [messageId]: score }));
   };
 
   return (
@@ -65,6 +82,24 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ projectId, onClose }) =>
             <div className={clsx("cw-bubble", msg.role === 'user' ? "cw-bubble-user" : "cw-bubble-assistant")}>
               {msg.content}
             </div>
+            {msg.role === 'assistant' && !msg.isStreaming && (
+                <div className="flex gap-2 mt-1 ml-1">
+                   <button 
+                     onClick={() => handleFeedback(msg.id, 1)}
+                     className={clsx("p-1 hover:bg-gray-100 rounded", feedbackGiven[msg.id] === 1 ? "text-green-600" : "text-gray-400")}
+                     disabled={!!feedbackGiven[msg.id]}
+                   >
+                       <ThumbsUp size={14} />
+                   </button>
+                   <button 
+                     onClick={() => handleFeedback(msg.id, -1)}
+                     className={clsx("p-1 hover:bg-gray-100 rounded", feedbackGiven[msg.id] === -1 ? "text-red-600" : "text-gray-400")}
+                     disabled={!!feedbackGiven[msg.id]}
+                   >
+                       <ThumbsDown size={14} />
+                   </button>
+                </div>
+            )}
             {msg.role === 'assistant' && msg.timestamp && (
               <div className="cw-meta">
                 Converso AI • {new Date(msg.timestamp).toLocaleString()}
@@ -89,6 +124,21 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ projectId, onClose }) =>
 
       <form onSubmit={handleSubmit} className="cw-input">
         <div className="cw-input-row">
+          <input 
+             type="file" 
+             ref={fileInputRef}
+             className="hidden" 
+             onChange={handleFileUpload}
+             accept=".txt,.md,.json,.csv"
+          />
+          <button 
+            type="button" 
+            className="p-2 text-gray-400 hover:text-gray-600"
+            onClick={() => fileInputRef.current?.click()}
+            title="Upload file"
+          >
+             <Paperclip size={20} />
+          </button>
           <input
             type="text"
             value={inputValue}

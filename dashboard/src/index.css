@@ -1,74 +1,71 @@
 @import "tailwindcss";
 
 :root {
-  --bg-start: #0b1020;
-  --bg-end: #0a0d16;
-  --card-bg: rgba(18, 24, 38, 0.9);
-  --card-border: rgba(64, 72, 88, 0.6);
-  --card-shadow: 0 6px 20px rgba(0,0,0,0.35);
-  --ring: #60a5fa;
+  --bg-start: #0f172a;
+  --bg-end: #020617;
+  --card-bg: rgba(15, 23, 42, 0.6);
+  --card-border: rgba(30, 41, 59, 0.5);
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-end);
+  color: #f8fafc;
 }
 
 .app-bg {
-  background: radial-gradient(1200px 600px at 10% 10%, #0e1b2e 0%, var(--bg-start) 30%, var(--bg-end) 100%);
+  background: radial-gradient(circle at 50% 0%, #1e293b 0%, var(--bg-start) 40%, var(--bg-end) 100%);
 }
 
 .card-base {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 16px;
-  box-shadow: var(--card-shadow);
-  backdrop-filter: saturate(110%) blur(6px);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s ease-in-out;
+}
+
+.card-base:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
 }
 
 .input-base {
-  background-color: #0b1220;
-  border: 1px solid rgba(96, 115, 159, 0.35);
-  color: #e5e7eb;
-  border-radius: 10px;
+  background-color: #0f172a;
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  color: #f1f5f9;
+  border-radius: 8px;
   padding: 0.5rem 0.75rem;
   outline: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition: all 0.2s;
+  width: 100%;
 }
+
 .input-base:focus {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
+
 .input-base::placeholder {
-  color: #9ca3af;
+  color: #64748b;
 }
 
-.select-base {
-  background-color: #0b1220;
-  border: 1px solid rgba(96, 115, 159, 0.35);
-  color: #e5e7eb;
-  border-radius: 10px;
-  padding: 0.5rem 0.75rem;
-  outline: none;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.table-base {
-  border-collapse: separate;
-  border-spacing: 0;
-}
-.table-base thead tr {
-  background: rgba(14, 20, 34, 0.85);
-}
-.table-base tbody tr:nth-child(odd) {
-  background: rgba(12, 16, 26, 0.6);
-}
-.table-base tbody tr:nth-child(even) {
-  background: rgba(12, 16, 26, 0.3);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.label-base {
-  color: #cbd5e1;
-  font-size: 0.85rem;
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
 }
 
-.sticky-card {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }

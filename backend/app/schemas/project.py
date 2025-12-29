@@ -7,9 +7,16 @@ class ProjectBase(BaseModel):
     name: str
     description: Optional[str] = None
     vector_namespace: str
+    welcome_message: Optional[str] = None
 
 class ProjectCreate(ProjectBase):
     pass
+
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    welcome_message: Optional[str] = None
+    system_prompt: Optional[str] = None
 
 class ProjectResponse(ProjectBase):
     id: UUID

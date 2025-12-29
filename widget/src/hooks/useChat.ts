@@ -20,6 +20,8 @@ export function useChat(projectId: string) {
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<any>(null);
+  const reconnectAttemptsRef = useRef(0);
   const sessionIdRef = useRef<string>(uuidv4());
   const SESSION_KEY = `converso_session_${projectId}`;
   const MESSAGES_KEY = `converso_messages_${projectId}`;
@@ -112,37 +114,53 @@ export function useChat(projectId: string) {
       '';
     const wsUrl = `${baseUrl}/chat/${projectId}/ws${apiKey ? `?api_key=${encodeURIComponent(apiKey)}` : ''}`;
 
-    console.log('Connecting to', wsUrl);
-    const ws = new WebSocket(wsUrl);
+    const connect = () => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    ws.onopen = () => {
-      console.log('Connected to Chat WebSocket');
-      setIsConnected(true);
+      console.log('Connecting to', wsUrl);
+      const ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('Connected to Chat WebSocket');
+        setIsConnected(true);
+        reconnectAttemptsRef.current = 0;
+      };
+
+      ws.onclose = () => {
+        console.log('Disconnected from Chat WebSocket');
+        setIsConnected(false);
+        // Smart Reconnection
+        if (reconnectAttemptsRef.current < 5) {
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+          console.log(`Reconnecting in ${delay}ms...`);
+          reconnectTimeoutRef.current = setTimeout(() => {
+            reconnectAttemptsRef.current += 1;
+            connect();
+          }, delay);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as ServerMessage;
+          handleMessage(data);
+        } catch (err) {
+          console.error('Failed to parse message:', err);
+        }
+      };
+
+      wsRef.current = ws;
     };
 
-    ws.onclose = () => {
-      console.log('Disconnected from Chat WebSocket');
-      setIsConnected(false);
-      // Implement reconnection logic here if needed
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data) as ServerMessage;
-        handleMessage(data);
-      } catch (err) {
-        console.error('Failed to parse message:', err);
-      }
-    };
-
-    wsRef.current = ws;
+    connect();
 
     return () => {
-      ws.close();
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      wsRef.current?.close();
     };
   }, [projectId, handleMessage]);
 
@@ -169,10 +187,53 @@ export function useChat(projectId: string) {
     }));
   }, []);
 
+  const submitFeedback = useCallback(async (messageId: string, score: number) => {
+    const apiBase =
+      (typeof window !== 'undefined' && (window as unknown as Record<string, string>).CONVERSO_API_BASE_URL) ||
+      (typeof window !== 'undefined' && window.localStorage.getItem('converso_api_base')) ||
+      'http://localhost:8000/api/v1';
+    
+    try {
+      await fetch(`${apiBase}/chat/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message_id: messageId, score }),
+      });
+      console.log('Feedback submitted');
+    } catch (e) {
+      console.error('Failed to submit feedback', e);
+    }
+  }, []);
+
+  const uploadFile = useCallback(async (file: File) => {
+    const apiBase =
+      (typeof window !== 'undefined' && (window as unknown as Record<string, string>).CONVERSO_API_BASE_URL) ||
+      (typeof window !== 'undefined' && window.localStorage.getItem('converso_api_base')) ||
+      'http://localhost:8000/api/v1';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`${apiBase}/chat/${projectId}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      return data.content as string;
+    } catch (e) {
+      console.error('Failed to upload file', e);
+      return null;
+    }
+  }, [projectId]);
+
   return {
     messages,
     sendMessage,
     isConnected,
-    isTyping
+    isTyping,
+    submitFeedback,
+    uploadFile
   };
 }

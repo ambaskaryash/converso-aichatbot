@@ -47,11 +47,38 @@ async def overview_metrics(
                 .where(ChatSession.project_id == project_id)
             )
         ).scalar() or 0
+        
+        # Feedback stats
+        positive_feedback = (
+            await db.execute(
+                select(func.count(ChatMessage.id))
+                .join(ChatSession, ChatMessage.session_id == ChatSession.id)
+                .where(ChatSession.project_id == project_id)
+                .where(ChatMessage.feedback_score == 1)
+            )
+        ).scalar() or 0
+        
+        negative_feedback = (
+            await db.execute(
+                select(func.count(ChatMessage.id))
+                .join(ChatSession, ChatMessage.session_id == ChatSession.id)
+                .where(ChatSession.project_id == project_id)
+                .where(ChatMessage.feedback_score == -1)
+            )
+        ).scalar() or 0
     else:
         messages_today = (
             await db.execute(
                 select(func.count(ChatMessage.id)).where(ChatMessage.created_at >= today_start)
             )
+        ).scalar() or 0
+        
+        positive_feedback = (
+            await db.execute(select(func.count(ChatMessage.id)).where(ChatMessage.feedback_score == 1))
+        ).scalar() or 0
+        
+        negative_feedback = (
+            await db.execute(select(func.count(ChatMessage.id)).where(ChatMessage.feedback_score == -1))
         ).scalar() or 0
 
     # Active users approximation: distinct sessions with messages in last 24h
@@ -117,6 +144,8 @@ async def overview_metrics(
         "avg_response_ms": avg_response_ms,
         "status": "live",
         "usage": usage,
+        "positive_feedback": int(positive_feedback),
+        "negative_feedback": int(negative_feedback),
     }
     _CACHE[cache_key] = (now, result)
     return result
