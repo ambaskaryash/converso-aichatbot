@@ -1,0 +1,10 @@
+venv/
+**/node_modules/
+**/dist/
+.DS_Store
+*.log
+*.local
+*.env
+backend/.env
+dashboard/dist/
+widget/dist/
