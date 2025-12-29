@@ -19,7 +19,7 @@ export const Embed: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [newDomain, setNewDomain] = useState('');
   const queryClient = useQueryClient();
-  const WIDGET_DEV_URL = (import.meta.env.VITE_WIDGET_DEV_URL as string | undefined) ?? 'http://localhost:5173';
+  const WIDGET_DEV_URL = (import.meta.env.VITE_WIDGET_DEV_URL as string | undefined) ?? 'http://localhost:8081';
 
   const { data: embedSettings } = useQuery({
     queryKey: ['embed-settings', project?.id],
@@ -43,9 +43,58 @@ export const Embed: React.FC = () => {
     },
   });
 
-  const snippet = project
-    ? `<script src="https://cdn.embedai.dev/widget.js" data-project-id="${project.id}"></script>`
-    : '<script src="https://cdn.embedai.dev/widget.js" data-project-id="PROJECT_ID"></script>';
+  const [embedFormat, setEmbedFormat] = useState<'html' | 'react' | 'next' | 'vue'>('html');
+
+  const snippet = useMemo(() => {
+    const pid = project?.id ?? 'PROJECT_ID';
+    const widgetUrl = 'https://cdn.embedai.dev/widget.js';
+
+    switch (embedFormat) {
+      case 'react':
+        return `import { useEffect } from 'react';
+
+export const ConversoWidget = () => {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "${widgetUrl}";
+    script.dataset.projectId = "${pid}";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  return null;
+};`;
+      case 'next':
+        return `import Script from 'next/script';
+
+export const ConversoWidget = () => (
+  <Script
+    src="${widgetUrl}"
+    data-project-id="${pid}"
+    strategy="lazyOnload"
+  />
+);`;
+      case 'vue':
+        return `<script setup>
+import { onMounted } from 'vue';
+
+onMounted(() => {
+  const script = document.createElement('script');
+  script.src = "${widgetUrl}";
+  script.dataset.projectId = "${pid}";
+  script.async = true;
+  document.body.appendChild(script);
+});
+</script>`;
+      case 'html':
+      default:
+        return `<script src="${widgetUrl}" data-project-id="${pid}"></script>`;
+    }
+  }, [project, embedFormat]);
 
   const copySnippet = () => {
     navigator.clipboard.writeText(snippet);
@@ -104,8 +153,25 @@ export const Embed: React.FC = () => {
             <Code size={18} />
             Embed Code
           </h3>
-          <p className="text-sm text-gray-400 mt-2">Paste inside your website's body tag</p>
-          <div className="mt-4 bg-gray-950 border border-gray-800 rounded-lg p-4 overflow-x-auto">
+          <p className="text-sm text-gray-400 mt-2">Select your framework and paste the code:</p>
+          
+          <div className="mt-4 flex gap-2 border-b border-gray-800 pb-1">
+            {(['html', 'react', 'next', 'vue'] as const).map((fmt) => (
+              <button
+                key={fmt}
+                onClick={() => setEmbedFormat(fmt)}
+                className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                  embedFormat === fmt
+                    ? 'bg-gray-800 text-gray-100 border-t border-x border-gray-700'
+                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-900'
+                }`}
+              >
+                {fmt === 'html' ? 'HTML' : fmt === 'react' ? 'React' : fmt === 'next' ? 'Next.js' : 'Vue'}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-gray-950 border border-gray-800 border-t-0 rounded-b-lg p-4 overflow-x-auto">
             <pre className="text-sm text-gray-200 font-mono">{snippet}</pre>
           </div>
           <div className="mt-4 flex gap-3">

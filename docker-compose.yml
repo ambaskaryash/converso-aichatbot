@@ -23,6 +23,52 @@ services:
       - redis_data:/data
     restart: always
 
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: converso-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db/converso
+      REDIS_URL: redis://redis:6379/0
+      BACKEND_CORS_ORIGINS: '["http://localhost:8080","http://localhost:8081"]'
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-env}
+    env_file:
+      - backend/.env
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: converso-dashboard
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: always
+
+  widget:
+    build:
+      context: .
+      dockerfile: widget/Dockerfile
+    container_name: converso-widget
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    restart: always
+
 volumes:
   postgres_data:
   redis_data:

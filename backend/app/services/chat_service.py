@@ -8,6 +8,9 @@ from app.core.config import settings
 from app.models.all_models import Project, ChatSession, ChatMessage
 from app.services.llm_factory import get_llm
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ChatService:
     def __init__(self):
@@ -46,8 +49,12 @@ class ChatService:
         await db.flush()
         user_time = datetime.utcnow()
 
-        # 2. Retrieve Context
-        context = await rag_service.retrieve_context(db, project_id, message)
+        # 2. Retrieve Context (robust)
+        try:
+            context = await rag_service.retrieve_context(db, project_id, message)
+        except Exception as e:
+            logger.warning(f"RAG context retrieval failed for project {project_id}: {e}")
+            context = ""
         
         # 3. Construct Prompt
         system_prompt = project.system_prompt or "You are a helpful AI assistant."
@@ -63,6 +70,7 @@ class ChatService:
         first_token_time_ms: Optional[float] = None
         full_response_parts: list[str] = []
         try:
+            logger.info(f"Starting LLM stream for project {project_id} session {session_id}")
             async for chunk in self.llm.astream(messages):
                 if chunk.content:
                     if first_token_time_ms is None:
@@ -70,6 +78,7 @@ class ChatService:
                     yield chunk.content
                     full_response_parts.append(chunk.content)
         except Exception as e:
+            logger.error(f"LLM streaming error for project {project_id} session {session_id}: {e}")
             yield f"Error generating response: {str(e)}"
             full_response_parts.append(f"Error generating response: {str(e)}")
         finally:

@@ -10,8 +10,8 @@ from app.services.embeddings_factory import get_embeddings
 
 class IngestionService:
     def __init__(self):
-        # Use factory to get configured embeddings
-        self.embeddings = get_embeddings()
+        # Lazy init embeddings to avoid network calls during app import
+        self.embeddings = None
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
@@ -22,6 +22,8 @@ class IngestionService:
         """
         Split text into chunks, generate embeddings, and store in the database.
         """
+        if self.embeddings is None:
+            self.embeddings = get_embeddings()
         # 1. Validate project exists
         project = await db.get(Project, project_id)
         if not project:

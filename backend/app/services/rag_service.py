@@ -8,13 +8,15 @@ from app.services.embeddings_factory import get_embeddings
 
 class RAGService:
     def __init__(self):
-        # Use factory to get configured embeddings
-        self.embeddings = get_embeddings()
+        # Lazy init embeddings to avoid network calls during app import
+        self.embeddings = None
 
     async def retrieve_context(self, db: AsyncSession, project_id: uuid.UUID, query: str, limit: int = 4) -> str:
         """
         Retrieve relevant documents for a query and format them as context.
         """
+        if self.embeddings is None:
+            self.embeddings = get_embeddings()
         # 1. Embed query
         query_vector = await self.embeddings.aembed_query(query)
         

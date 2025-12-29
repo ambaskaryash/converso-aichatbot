@@ -46,6 +46,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/projects/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}`, 'x-csrf-token': getCsrfToken() },
+      credentials: 'include',
       body: JSON.stringify({
         name,
         vector_namespace: `ns_${crypto.randomUUID()}`,
@@ -86,6 +87,7 @@ export const api = {
     const params = new URLSearchParams({ skip: String(skip), limit: String(limit), sort_by: sortBy, sort_order: sortOrder });
     const response = await fetch(`${API_BASE_URL}/admins/?${params.toString()}`, {
       headers: { Authorization: `Bearer ${getToken()}` },
+      credentials: 'include',
     });
     if (!response.ok) throw new Error('Failed to fetch admins');
     return response.json();
@@ -99,6 +101,7 @@ export const api = {
         Authorization: `Bearer ${getToken()}`,
         'x-csrf-token': getCsrfToken(),
       },
+      credentials: 'include',
       body: JSON.stringify({ email, password }),
     });
     if (!response.ok) {
@@ -116,6 +119,7 @@ export const api = {
         Authorization: `Bearer ${getToken()}`,
         'x-csrf-token': getCsrfToken(),
       },
+      credentials: 'include',
       body: JSON.stringify({ password }),
     });
     if (!response.ok) {

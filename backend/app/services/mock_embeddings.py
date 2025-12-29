@@ -3,7 +3,7 @@ from langchain_core.embeddings import Embeddings
 import random
 
 class MockEmbeddings(Embeddings):
-    def __init__(self, size: int = 1536):
+    def __init__(self, size: int = 384):
         self.size = size
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:

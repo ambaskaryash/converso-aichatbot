@@ -8,3 +8,5 @@ venv/
 backend/.env
 dashboard/dist/
 widget/dist/
+*.tf
+infra/

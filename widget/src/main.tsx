@@ -57,8 +57,22 @@ function mountWidget() {
   shadow.appendChild(mountPoint)
 
   // Get project ID from script tag data attribute or global config
-  // For now, we'll default to a placeholder or look for a global variable
-  const projectId = window.CONVERSO_PROJECT_ID || '00000000-0000-0000-0000-000000000000'
+  const getProjectId = () => {
+    if (window.CONVERSO_PROJECT_ID) return window.CONVERSO_PROJECT_ID;
+    
+    // Check script tag attributes
+    const scripts = document.getElementsByTagName('script');
+    for (let i = 0; i < scripts.length; i++) {
+      const script = scripts[i];
+      if (script.src.includes('widget.js') || script.src.includes('converso-widget.js')) {
+        const pid = script.getAttribute('data-project-id') || script.dataset.projectId;
+        if (pid) return pid;
+      }
+    }
+    return '00000000-0000-0000-0000-000000000000';
+  };
+
+  const projectId = getProjectId();
 
   const root = ReactDOM.createRoot(mountPoint)
   const render = (pid: string) =>
