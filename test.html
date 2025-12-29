@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Converso Widget Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #f0f0f0;
+        }
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Welcome to My Website</h1>
+        <p>This is a sample website hosting the Converso chatbot widget.</p>
+        <p>The widget should appear in the bottom right corner.</p>
+        <button onclick="window.Converso.init({ projectId: 'test-project-id' })">
+            Manually Init Widget
+        </button>
+    </div>
+
+    <!-- Load the widget -->
+    <script>
+        // Simulate configuration
+        window.CONVERSO_PROJECT_ID = "123e4567-e89b-12d3-a456-426614174000";
+    </script>
+    <script src="./widget/dist/converso-widget.js"></script>
+</body>
+</html>
