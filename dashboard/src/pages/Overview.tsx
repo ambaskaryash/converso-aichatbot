@@ -157,12 +157,12 @@ export const Overview: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="card-base p-6 lg:col-span-2">
+        <div className="card-base p-6 lg:col-span-2 min-w-0">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-100">Usage (7 days)</h3>
             <span className="text-sm text-gray-400">Projects: {projects.length}</span>
           </div>
-          <div className="h-64 mt-4">
+          <div className="h-64 mt-4 min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={usageData}>
                 <XAxis dataKey="day" stroke="#9ca3af" />
