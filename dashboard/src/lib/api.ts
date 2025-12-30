@@ -6,6 +6,18 @@ const getCsrfToken = () => {
   return match ? decodeURIComponent(match.split('=')[1]) : '';
 };
 
+// Helper to generate UUIDs in non-secure contexts (http)
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -50,7 +62,7 @@ export const api = {
       credentials: 'include',
       body: JSON.stringify({
         name,
-        vector_namespace: `ns_${crypto.randomUUID()}`,
+        vector_namespace: `ns_${generateUUID()}`,
       }),
     });
     if (!response.ok) throw new Error('Failed to create project');

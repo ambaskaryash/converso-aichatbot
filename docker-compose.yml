@@ -31,14 +31,14 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db/converso
       REDIS_URL: redis://redis:6379/0
-      BACKEND_CORS_ORIGINS: '["http://localhost:8080","http://localhost:8081"]'
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://43.204.98.96:8080","http://43.204.98.96:8081"]}
       SECRET_KEY: ${SECRET_KEY:-change-me-in-env}
     env_file:
       - backend/.env
     ports:
       - "8000:8000"
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/').status==200 else 1)"]
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/docs').status==200 else 1)"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -51,6 +51,8 @@ services:
     build:
       context: .
       dockerfile: dashboard/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://43.204.98.96:8000/api/v1}
     container_name: converso-dashboard
     ports:
       - "8080:80"
@@ -62,12 +64,23 @@ services:
     build:
       context: .
       dockerfile: widget/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://43.204.98.96:8000/api/v1}
     container_name: converso-widget
     ports:
       - "8081:80"
     depends_on:
       - backend
     restart: always
+
+  adminer:
+    image: adminer
+    container_name: converso-adminer
+    ports:
+      - "8082:8080"
+    restart: always
+    depends_on:
+      - db
 
 volumes:
   postgres_data:

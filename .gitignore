@@ -10,3 +10,4 @@ dashboard/dist/
 widget/dist/
 *.tf
 infra/
+aaPanel_DEPLOY.md

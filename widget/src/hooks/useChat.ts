@@ -106,6 +106,7 @@ export function useChat(projectId: string) {
     const apiBase =
       (typeof window !== 'undefined' && (window as unknown as Record<string, string>).CONVERSO_API_BASE_URL) ||
       (typeof window !== 'undefined' && window.localStorage.getItem('converso_api_base')) ||
+      (import.meta.env.VITE_API_BASE_URL as string) ||
       'http://localhost:8000/api/v1';
     const baseUrl = apiBase.replace(/^http/, 'ws');
     const apiKey =
@@ -191,6 +192,7 @@ export function useChat(projectId: string) {
     const apiBase =
       (typeof window !== 'undefined' && (window as unknown as Record<string, string>).CONVERSO_API_BASE_URL) ||
       (typeof window !== 'undefined' && window.localStorage.getItem('converso_api_base')) ||
+      (import.meta.env.VITE_API_BASE_URL as string) ||
       'http://localhost:8000/api/v1';
     
     try {
@@ -209,6 +211,7 @@ export function useChat(projectId: string) {
     const apiBase =
       (typeof window !== 'undefined' && (window as unknown as Record<string, string>).CONVERSO_API_BASE_URL) ||
       (typeof window !== 'undefined' && window.localStorage.getItem('converso_api_base')) ||
+      (import.meta.env.VITE_API_BASE_URL as string) ||
       'http://localhost:8000/api/v1';
 
     const formData = new FormData();

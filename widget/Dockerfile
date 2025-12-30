@@ -5,6 +5,10 @@ COPY widget/tsconfig*.json /app/
 COPY widget/vite.config.ts /app/
 RUN npm ci
 COPY widget /app
+
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 RUN npm run build
 
 FROM nginx:alpine
